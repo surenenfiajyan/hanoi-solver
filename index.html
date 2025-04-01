@@ -4,9 +4,18 @@
 
 <head>
 	<title>Hanoi solver</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<style>
 		main {
 			text-align: center;
+		}
+
+		.item {
+			position: relative;
+			margin-top: 5px;
+			height: 20px;
+			background-color: chocolate;
+			z-index: 10;
 		}
 
 		.container {
@@ -32,14 +41,6 @@
 					max-width: 20px;
 					background-color: brown;
 					translate: -50%;
-				}
-
-				.item {
-					position: relative;
-					margin-top: 5px;
-					height: 20px;
-					background-color: chocolate;
-					z-index: 10;
 				}
 			}
 		}
@@ -188,6 +189,8 @@
 			let dragged = null;
 
 			document.querySelectorAll('.stack').forEach(el => {
+				initMobileDrag(el);
+
 				el.ondragstart = ev => {
 					dragged = ev.target;
 				};
@@ -218,6 +221,81 @@
 					}
 				}
 			});
+
+			function initMobileDrag(element) {
+				let elementTouchingOver;
+				let target;
+				let targetClone;
+				let dragOverEvent;
+
+				element.ontouchstart = (ev) => {
+					elementTouchingOver = null;
+					target = null;
+					dragOverEvent = null;
+
+					if (ev.target instanceof HTMLElement && ev.target.closest('.item')) {
+						target = ev.target.closest('.item');
+						targetClone = target.cloneNode(true);
+						targetClone.style = `position: fixed; top: 0; left: 0; opacity: 0.5; pointer-events: none; width: ${target.clientWidth}px`;
+						document.body.append(targetClone);
+						const dragStartEvent = new Event('dragstart', { bubbles: true, cancelable: true });
+						target.dispatchEvent(dragStartEvent);
+					}
+				};
+
+				element.ontouchend = (ev) => {
+					targetClone?.remove();
+
+					if (!target || !dragOverEvent?.defaultPrevented) {
+						target = null;
+						return;
+					}
+
+					if (elementTouchingOver) {
+						const dropEvent = new Event('drop', { bubbles: true, cancelable: true });
+						elementTouchingOver.dispatchEvent(dropEvent);
+					} else {
+						const dragEndEvent = new Event('dragend', { bubbles: true, cancelable: true });
+						target.dispatchEvent(dragEndEvent);
+					}
+
+					elementTouchingOver = null;
+					target = null;
+					dragOverEvent = null;
+				};
+
+				element.ontouchmove = (ev) => {
+					if (!target) {
+						return;
+					}
+
+					targetClone.style.transform = `translate(${ev.touches[0].clientX - targetClone.clientWidth / 2}px, ${ev.touches[0].clientY - targetClone.clientHeight / 2}px)`;
+					const newElementTouchingOver = document.elementsFromPoint(ev.touches[0].clientX, ev.touches[0].clientY).find(x => x?.closest('.stack'));
+
+					if (newElementTouchingOver && elementTouchingOver !== newElementTouchingOver) {
+						dragOverEvent = new Event('dragover', { bubbles: true, cancelable: true });
+						newElementTouchingOver.dispatchEvent(dragOverEvent);
+					}
+
+					elementTouchingOver = newElementTouchingOver;
+				};
+
+				element.ontouchcancel = (ev) => {
+					targetClone?.remove();
+
+					if (!target || !dragOverEvent?.defaultPrevented) {
+						target = null;
+						return;
+					}
+
+					const dragEndEvent = new Event('dragend', { bubbles: true, cancelable: true });
+					target.dispatchEvent(dragEndEvent);
+
+					elementTouchingOver = null;
+					target = null;
+					dragOverEvent = null;
+				};
+			}
 		</script>
 </body>
 
