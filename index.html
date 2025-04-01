@@ -236,7 +236,7 @@
 					if (ev.target instanceof HTMLElement && ev.target.closest('.item')) {
 						target = ev.target.closest('.item');
 						targetClone = target.cloneNode(true);
-						targetClone.style = `position: fixed; top: 0; left: 0; opacity: 0.5; pointer-events: none; width: ${target.clientWidth}px`;
+						targetClone.style = `position: fixed; top: 0; left: 0; opacity: 0.5; pointer-events: none; width: ${target.clientWidth}px; display: none;`;
 						document.body.append(targetClone);
 						const dragStartEvent = new Event('dragstart', { bubbles: true, cancelable: true });
 						target.dispatchEvent(dragStartEvent);
@@ -269,6 +269,7 @@
 						return;
 					}
 
+					targetClone.style.display = '';
 					targetClone.style.transform = `translate(${ev.touches[0].clientX - targetClone.clientWidth / 2}px, ${ev.touches[0].clientY - targetClone.clientHeight / 2}px)`;
 					const newElementTouchingOver = document.elementsFromPoint(ev.touches[0].clientX, ev.touches[0].clientY).find(x => x?.closest('.stack'));
 
